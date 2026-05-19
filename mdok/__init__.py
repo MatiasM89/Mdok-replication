@@ -8,6 +8,7 @@ from scipy.special import softmax
 import torch
 import re
 import random
+from tqdm import tqdm
 import os
 
 RANDOM_SEED = 42
@@ -28,11 +29,13 @@ def preprocess(text):
 
 def test(test_df, model_path, id2label, label2id):
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    print("Load Model", flush=True)
     bnb_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16)
     model = AutoModelForSequenceClassification.from_pretrained(
-        model_path, trust_remote_code=True, num_labels=len(label2id), id2label=id2label, label2id=label2id, torch_dtype=torch.bfloat16, quantization_config=bnb_config
+        model_path, trust_remote_code=True, num_labels=len(label2id), id2label=id2label, label2id=label2id, torch_dtype=torch.bfloat16, quantization_config=bnb_config, device_map="auto"
     )
     model.eval()
+    print(model.device, flush=True)
 
     if tokenizer.pad_token is None:
         if tokenizer.eos_token is not None:
@@ -47,7 +50,7 @@ def test(test_df, model_path, id2label, label2id):
     texts = test_df['text'].tolist()
     all_logits = []
     with torch.no_grad():
-        for i in range(0, len(texts), BATCH_SIZE):
+        for i in tqdm(range(0, len(texts), BATCH_SIZE), "predict"):
             batch = texts[i:i + BATCH_SIZE]
             inputs = tokenizer(batch, truncation=True, max_length=512, padding=True, return_tensors='pt')
             inputs = {k: v.to(model.device) for k, v in inputs.items()}

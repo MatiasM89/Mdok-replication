@@ -8,8 +8,11 @@ docker build -t mdok-styloch .
 ```
 
 ```bash
-tira-run \
-  --input-dataset generative-ai-authorship-verification-panclef-2026/pan26-generative-ai-detection-smoke-test-20260330-training \
-  --image mdok-styloch \
-  --command 'mdok -i $inputDataset/dataset.jsonl -o $outputDir'
+tira-cli code-submission \
+	--path . \
+	--task generative-ai-authorship-verification-panclef-2026 \
+	--mount-hf-model Mmatias89/Mdok-Qwen3-14B \
+	--dataset pan26-generative-ai-detection-smoke-test-20260330-training \
+	--command '/usr/local/bin/mdok -i $inputDataset/*.jsonl -o $outputDir' \
+	--dry-run
 ```
