@@ -1,0 +1,8 @@
+.dockerignore
+.git
+__pycache__
+*.egg-info
+build
+model/
+model-test/
+tira-output/
